@@ -44,7 +44,15 @@ plat=$(uname|tr A-Z a-z)-$arch
 venv=$cache/venv
 mkdir -p $cache/pip
 python=python2.6
-PATH=$venv/bin:$PATH
+tools=$cache/tools
+mkdir -p $tools
+PATH=$venv/bin:$tools:$PATH
+
+#install jq tool
+if ! (test -e $tools/jq)
+then
+    wget -O $tools/jq http://stedolan.github.io/jq/download/linux64/jq
+fi
 
 #virtualenv() {
 #    python "$buildpack/vendor/virtualenv-1.7/virtualenv.py" "$@"
@@ -117,6 +125,9 @@ then
     echo " done"
 fi
 
+#install godep
+echo "-----> Running: go get https://github.com/tools/godep"
+go get https://github.com/tools/godep
 
 p=$GOPATH/src/$name
 mkdir -p $p
