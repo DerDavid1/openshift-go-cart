@@ -8,13 +8,37 @@ set -eo pipefail
 
 source "${OPENSHIFT_GO_DIR}/lib/util"
 
+# Go releases have moved to a new URL scheme
+# starting with Go version 1.2.2. Return the old
+# location for known old versions and the new
+# location otherwise.
+urlfor() {
+    ver=$1
+    file=$2
+    case $ver in
+        go1.0*|go1.1beta*|go1.1rc*|go1.1|go1.1.*|go1.2beta*|go1.2rc*|go1.2|go1.2.1)
+        echo http://go.googlecode.com/files/$file
+        ;;
+    *)
+        echo https://storage.googleapis.com/golang/$file
+        ;;
+    esac
+}
+
+
 mkdir -p "$1" "$2"
 build=$(cd "$1/" && pwd)
 cache=$(cd "$2/" && pwd)
 ver=${GOVERSION:-1.3}
-file=${GOFILE:-go$ver.$(uname|tr A-Z a-z)-amd64.tar.gz}
-url=${GOURL:-https://storage.googleapis.com/golang/$file}
+#file=${GOFILE:-go$ver.$(uname|tr A-Z a-z)-amd64.tar.gz}
+#url=${GOURL:-https://storage.googleapis.com/golang/$file}
 buildpack=$(dirname $(dirname $0))
+arch=$(uname -m|tr A-Z a-z)
+if test $arch = x86_64
+then arch=amd64
+fi
+plat=$(uname|tr A-Z a-z)-$arch
+
 
 # Python
 venv=$cache/venv
@@ -32,19 +56,32 @@ then
     exit 1
 fi
 
-if ! test -f $build/.godir
+if test -f $build/Godeps
 then
+    name=$(<$build/Godeps jq -r .ImportPath)
+    ver=$(<$build/Godeps jq -r .GoVersion)
+elif test -d $build/Godeps
+then
+    name=$(<$build/Godeps/Godeps.json jq -r .ImportPath)
+    ver=$(<$build/Godeps/Godeps.json jq -r .GoVersion)
+elif test -f $build/.godir
+then
+    name=$(cat $build/.godir)
+    ver=go${GOVERSION:-1.3}
+else
     echo >&2 " !     A .godir is required. For instructions:"
-    echo >&2 " !     http://mmcgrana.github.com/2012/09/getting-started-with-go-on-heroku"
-    echo >&2 " !     https://www.openshift.com/kb/kb-TDOD-some-golang-instructions"
+    echo >&2 " !     http://mmcgrana.github.io/2012/09/getting-started-with-go-on-heroku"
     exit 1
 fi
+
+file=${GOFILE:-$ver.$(uname|tr A-Z a-z)-amd64.tar.gz}
+url=${GOURL:-$(urlfor $ver $file)}
 
 if test -d $cache/go-$ver/go
 then
     echo "-----> Using Go $ver"
 else
-    #rm -rf $cache/* # be sure not to build up cruft
+    rm -rf $cache/* # be sure not to build up cruft
     mkdir -p $cache/go-$ver
     cd $cache/go-$ver
     echo    "       First download, may take several minutes"
@@ -59,31 +96,50 @@ GOROOT=$cache/go-$ver/go export GOROOT
 GOPATH=$build/.openshift/g export GOPATH
 PATH=$GOROOT/bin:$PATH
 
-if ! (which hg >/dev/null 2>&1 && which bzr >/dev/null 2>&1)
+if ! (test -d $build/Godeps || (which hg >/dev/null && which bzr >/dev/null))
 then
+    echo
+    echo "       Tired of waiting for bzr and hg?"
+    echo "       Try github.com/kr/godep for faster deploys."
+    echo
+
     echo -n "       Installing Virtualenv..."
-    virtualenv --python $python --distribute --never-download --prompt='(venv) ' $venv 2>&1 > /dev/null
-    . $venv/bin/activate 2>&1 > /dev/null
+    virtualenv --python $python --distribute --never-download --prompt='(venv) ' $venv > /dev/null 2>&1
+    . $venv/bin/activate > /dev/null 2>&1
     echo " done"
 
     echo -n "       Installing Mercurial..."
-    pip install --use-mirrors mercurial 2>&1 > /dev/null
+    pip install mercurial > /dev/null 2>&1
     echo " done"
 
     echo -n "       Installing Bazaar..."
-    pip install --use-mirrors bzr 2>&1 > /dev/null
+    pip install bzr > /dev/null 2>&1
     echo " done"
 fi
 
-name=$(get_godir $build/.godir)
+
 p=$GOPATH/src/$name
 mkdir -p $p
-cp -a $build/* $p
+cp -R $build/* $p
+
+
+FLAGS=(-tags openshift)
+
 
 unset GIT_DIR # unset git dir or it will mess with goinstall
 echo "-----> Running: go get -tags openshift ./..."
 cd $p
-go get -tags openshift ./...
+
+if test -e $build/Godeps
+then
+    echo "-----> Running: godep go install ${FLAGS[@]} ./..."
+    godep go install "${FLAGS[@]}" ./...
+else
+    echo "-----> Running: go get ${FLAGS[@]} ./..."
+    go get "${FLAGS[@]}" ./...
+fi
+
+
 
 mkdir -p $build/bin
 mv $GOPATH/bin/* $build/bin
