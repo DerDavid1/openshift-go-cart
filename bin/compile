@@ -127,7 +127,7 @@ fi
 
 #install godep
 echo "-----> Running: go get https://github.com/tools/godep"
-go get https://github.com/tools/godep
+go get "https://github.com/tools/godep"
 
 p=$GOPATH/src/$name
 mkdir -p $p
