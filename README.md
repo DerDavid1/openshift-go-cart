@@ -1,6 +1,11 @@
 OpenShift Go Cartridge
 ======================
 
+ToDo
+----
+Test cartridge
+cgo support`
+
 Tools - Links
 -----------
 rhc create-app gotest "https://raw.githubusercontent.com/DerDavid1/openshift-go-cart/master/metadata/manifest.yml"
