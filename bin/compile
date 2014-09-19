@@ -51,7 +51,7 @@ PATH=$venv/bin:$tools:$PATH
 #install jq tool
 if ! (test -e $tools/jq)
 then
-    wget -quiet -O $tools/jq http://stedolan.github.io/jq/download/linux64/jq
+    wget --quiet -O $tools/jq http://stedolan.github.io/jq/download/linux64/jq
     chown ugo+x $tools/jq
 fi
 
