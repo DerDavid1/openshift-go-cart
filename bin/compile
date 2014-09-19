@@ -52,7 +52,7 @@ PATH=$venv/bin:$tools:$PATH
 if ! (test -e $tools/jq)
 then
     wget --quiet -O $tools/jq http://stedolan.github.io/jq/download/linux64/jq
-    chown ugo+x $tools/jq
+    chmod ugo+x $tools/jq
 fi
 
 #virtualenv() {
