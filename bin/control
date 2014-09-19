@@ -9,10 +9,8 @@ function is_go_service_running() {
     exec_name=$(basename $(get_godir))
     if [ -f $OPENSHIFT_GO_DIR/pid/go.pid ]; then
         go_pid=$( cat $OPENSHIFT_GO_DIR/pid/go.pid 2> /dev/null )
-        if [ $go_pid ] ; then
-            if [ `ps --no-heading --pid $go_pid | wc -l` -gt 0 ] ; then
+        if [ `ps --no-heading --pid $go_pid | wc -l` -gt 0 ] ; then
             return 0
-            fi
         fi
     fi
 
@@ -20,7 +18,7 @@ function is_go_service_running() {
 }
 
 function status() {
-    if [ is_go_service_running ]; then
+    if is_go_service_running ; then
         client_result "Application is running"
     else
         client_result "Application is not running"
