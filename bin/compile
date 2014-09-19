@@ -3,6 +3,9 @@
 # Adapted from https://github.com/kr/heroku-buildpack-go
 #
 # usage: bin/compile <build-dir> <cache-dir>
+# TODO: clear cache dir
+# TODO: only install godeb if needed
+# TODO: test!
 
 set -eo pipefail
 
