@@ -90,7 +90,7 @@ if test -d $cache/go-$ver/go
 then
     echo "-----> Using Go $ver"
 else
-    rm -rf $cache/* # be sure not to build up cruft
+    #rm -rf $cache/* # be sure not to build up cruft
     mkdir -p $cache/go-$ver
     cd $cache/go-$ver
     echo    "       First download, may take several minutes"
@@ -129,6 +129,7 @@ fi
 #install godep
 echo "-----> Running: go get https://github.com/tools/godep"
 go get github.com/tools/godep
+cp $GOPATH/bin/godep $tools
 
 p=$GOPATH/src/$name
 mkdir -p $p
