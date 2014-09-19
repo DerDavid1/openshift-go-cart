@@ -1,6 +1,17 @@
 OpenShift Go Cartridge
 ======================
 
+Tools - Links
+-----------
+rhc create-app gotest "https://raw.githubusercontent.com/DerDavid1/openshift-go-cart/master/metadata/manifest.yml"
+https://developers.openshift.com/en/get-involved-extend-openshift.html
+godep save ./...
+
+https://access.redhat.com/documentation/en-US/OpenShift_Online/2.0/html/Cartridge_Specification_Guide/index.html
+https://github.com/kr/heroku-buildpack-go
+
+
+
 Runs [Go](http://golang.org) on [OpenShift](https://openshift.redhat.com/app/login) using downloadable cartridge support.  To install to OpenShift from the CLI (you'll need version 1.9 or later of rhc), run:
 
     rhc create-app mygo https://cartreflect-claytondev.rhcloud.com/reflect?github=smarterclayton/openshift-go-cart
